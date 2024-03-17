@@ -4,17 +4,14 @@ from sqlalchemy.orm import relationship, sessionmaker
 
 # Define the database connection URL
 # .env --> terraform --> aws
-# DATABASE_URL = "postgresql://postgres:postgres@postgres:5432/postgres"
+DATABASE_URL = "postgresql://postgres:postgres@postgres:5432/postgres"
 
 # Create a base class for declarative models
 Base = declarative_base()
 
 # Create an SQLAlchemy engine
-# engine = create_engine(DATABASE_URL)
-engine = create_engine("sqlite:///workflow.db")
-
-# Create a session class
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+engine = create_engine(DATABASE_URL)
+# engine = create_engine("sqlite:///workflow.db")
 
 
 class Workflow(Base):
@@ -41,6 +38,9 @@ class Component(Base):
 
 # Create tables in the database
 Base.metadata.create_all(engine)
+
+# Create a session class
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Dependency
 def get_db():

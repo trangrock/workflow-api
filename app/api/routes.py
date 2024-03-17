@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 from sqlalchemy.orm import Session
 
-from app.api.models import Workflow
+from app.api.models import Workflow, Component
 from app.db.models import get_db, Workflow as WorkflowData, Component as ComponentData
 
 router = APIRouter()
@@ -13,10 +13,13 @@ async def create_workflow(workflow: Workflow, db: Session = Depends(get_db)):
     try:
         # Create SQLAlchemy models for the workflow and its components
         db_workflow = WorkflowData(name = workflow.name)
-        db_components = [ComponentData(type=c.type, settings=c.settings) for c in workflow.components]
-
-        # Add components to the workflow
-        db_workflow.components = db_components
+        # Create and add components to the database session
+        db_components = []
+        for c in workflow.components:
+            db_component = ComponentData(type=c.type, settings=c.settings)
+            db_component.workflow = db_workflow
+            db_components.append(db_component)
+            db.add(db_component)
 
         # Add the workflow to the database session and commit changes
         db.add(db_workflow)
@@ -35,7 +38,7 @@ async def get_all_workflows(db: Session = Depends(get_db)):
     results = []
     try:
         data = db.query(WorkflowData).all()
-        results = [item.__dict__ for item in data]  # Convert SQLAlchemy ORM objects to dicts
+        results = data
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     return results
